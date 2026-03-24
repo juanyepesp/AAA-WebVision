@@ -124,3 +124,4 @@ app.get("/item-text", (_req, res) => {
 
 const port = process.env.PORT || 8787;
 app.listen(port, () => log.info(`Guidepup bridge listening on :${port}`));
+// CLI: node server.js
