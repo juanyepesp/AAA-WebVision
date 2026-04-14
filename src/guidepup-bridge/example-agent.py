@@ -1,6 +1,3 @@
-# ============
-#  Prereqs
-# ============
 import os
 import nest_asyncio
 nest_asyncio.apply()
@@ -15,21 +12,14 @@ import pyautogui
 from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.tools import tool
-from langchain.agents import create_agent  # <- API recomendada en v1
-# Nota: ya NO usamos AgentExecutor ni create_tool_calling_agent en v1.  # [3](https://docs.langchain.com/oss/python/migrate/langchain-v1)
+from langchain.agents import create_agent
 
-# ============
-#  Azure LLM
-# ============      
 llm = AzureChatOpenAI(
     azure_deployment="gpt-4.1",
     api_version="2024-12-01-preview",
     temperature=0
 )
 
-# ============
-#  Bridge config
-# ============
 BASE_URL = os.environ.get("GUIDEPUP_BASE_URL", "http://localhost:8787")
 TOKEN = os.environ.get("GUIDEPUP_BRIDGE_TOKEN", "supersecret")
 HEADERS = {"Authorization": f"Bearer {TOKEN}"} if TOKEN else {}
@@ -101,9 +91,6 @@ def _bootstrap_browser_session() -> dict:
         "bootstrap_url": "about:blank",
     }
 
-# ============
-#  Structured output 
-# ============
 class SRObservation(BaseModel):
     sr_type: Optional[Literal["voiceover", "nvda"]] = Field(None, description="Type of active screen reader.")
     last_phrase: Optional[str] = Field(None, description="Last spoken phrase.")
@@ -288,12 +275,6 @@ tools = [
     browser_state, wait
 ]
 
-# ============
-#  Crear el agente (API v1)
-#  - Se usa system_prompt (string), no ChatPromptTemplate.
-#  - La invocación es con {"messages":[...]} y no con {"input": "..."}.
-#  - Debajo usa LangGraph (ciclo ReAct de tool-calling).  [3](https://docs.langchain.com/oss/python/migrate/langchain-v1)
-# ============
 SYSTEM_PROMPT = (
     "You are an autonomous accessibility agent restricted to Safari plus screen-reader tools.\n"
     "- Use sr_start to start VoiceOver (you are running on macOS).\n"
@@ -309,14 +290,11 @@ SYSTEM_PROMPT = (
 )
 
 agent = create_agent(
-    model=llm,           # puedes pasar instancia ChatModel o string del modelo  [3](https://docs.langchain.com/oss/python/migrate/langchain-v1)
+    model=llm,
     tools=tools,
     system_prompt=SYSTEM_PROMPT
 )
 
-# ============
-#  Invocación (nota: input ahora es 'messages')
-# ============
 user_goal = (
     "Open a new Safari tab,"
     "go to wikipedia and search for Hello World program."
